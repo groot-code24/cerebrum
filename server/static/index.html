@@ -1,0 +1,521 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>C. elegans — Live Neural Activity</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/d3/7.8.5/d3.min.js"></script>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: #0a0e1a;
+    color: #e0e0e0;
+    font-family: 'Courier New', monospace;
+    display: grid;
+    grid-template-rows: 48px 1fr 200px;
+    grid-template-columns: 1fr 320px;
+    height: 100vh;
+    overflow: hidden;
+  }
+
+  header {
+    grid-column: 1 / -1;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    padding: 0 20px;
+    background: #111827;
+    border-bottom: 1px solid #1f2d3d;
+  }
+  header h1 { font-size: 15px; color: #60a5fa; letter-spacing: 0.05em; }
+  .badge {
+    padding: 2px 8px;
+    border-radius: 3px;
+    font-size: 11px;
+    font-weight: bold;
+  }
+  .badge.live { background: #10b981; color: #fff; animation: pulse 1.5s infinite; }
+  .badge.paused { background: #6b7280; color: #fff; }
+  @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.5} }
+  #step-counter { margin-left: auto; font-size: 12px; color: #9ca3af; }
+  #ci-display { font-size: 13px; }
+  .ci-good { color: #10b981; }
+  .ci-bad  { color: #ef4444; }
+
+  #graph-panel {
+    grid-row: 2;
+    grid-column: 1;
+    position: relative;
+    overflow: hidden;
+  }
+
+  svg#connectome {
+    width: 100%;
+    height: 100%;
+  }
+
+  .node circle {
+    stroke-width: 0;
+    transition: r 0.05s;
+  }
+  .node.spiking circle {
+    filter: drop-shadow(0 0 6px currentColor);
+  }
+  .link {
+    stroke-opacity: 0.25;
+    stroke: #374151;
+  }
+
+  #worm-panel {
+    grid-row: 2;
+    grid-column: 2;
+    border-left: 1px solid #1f2d3d;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+  }
+  #worm-panel h3 {
+    padding: 10px 14px;
+    font-size: 12px;
+    color: #9ca3af;
+    border-bottom: 1px solid #1f2d3d;
+  }
+  svg#worm-view {
+    flex: 1;
+    width: 100%;
+  }
+
+  #stats-panel {
+    grid-column: 1 / -1;
+    border-top: 1px solid #1f2d3d;
+    padding: 8px 20px;
+    display: flex;
+    gap: 32px;
+    align-items: center;
+    background: #111827;
+    overflow-x: auto;
+  }
+  .stat { display: flex; flex-direction: column; gap: 2px; }
+  .stat label { font-size: 10px; color: #6b7280; text-transform: uppercase; letter-spacing: 0.1em; }
+  .stat .value { font-size: 18px; color: #f9fafb; font-weight: bold; }
+
+  #spike-chart {
+    flex: 1;
+    height: 60px;
+    min-width: 300px;
+  }
+
+  .tooltip {
+    position: absolute;
+    background: rgba(17,24,39,0.95);
+    border: 1px solid #374151;
+    padding: 6px 10px;
+    border-radius: 4px;
+    font-size: 11px;
+    pointer-events: none;
+    display: none;
+    z-index: 100;
+  }
+
+  /* Legend */
+  .legend { display: flex; gap: 12px; padding: 6px 14px; }
+  .legend-item { display: flex; align-items: center; gap: 5px; font-size: 10px; color: #9ca3af; }
+  .legend-dot { width: 8px; height: 8px; border-radius: 50%; }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>⟨C. elegans⟩ Live Connectome</h1>
+  <span class="badge paused" id="status-badge">CONNECTING</span>
+  <span id="ci-display">CI: —</span>
+  <span id="step-counter">Step: 0</span>
+</header>
+
+<div id="graph-panel">
+  <svg id="connectome"></svg>
+  <div class="tooltip" id="tooltip"></div>
+</div>
+
+<div id="worm-panel">
+  <h3>🐛 Worm Body &amp; Trajectory</h3>
+  <svg id="worm-view"></svg>
+  <div class="legend">
+    <div class="legend-item"><div class="legend-dot" style="background:#4fc3f7"></div>Sensory</div>
+    <div class="legend-item"><div class="legend-dot" style="background:#aed581"></div>Interneuron</div>
+    <div class="legend-item"><div class="legend-dot" style="background:#ef9a9a"></div>Motor</div>
+    <div class="legend-item"><div class="legend-dot" style="background:#ce93d8"></div>Pharyngeal</div>
+  </div>
+</div>
+
+<div id="stats-panel">
+  <div class="stat"><label>Sensory rate</label><span class="value" id="stat-sensory">0.00</span></div>
+  <div class="stat"><label>Interneuron rate</label><span class="value" id="stat-inter">0.00</span></div>
+  <div class="stat"><label>Motor rate</label><span class="value" id="stat-motor">0.00</span></div>
+  <div class="stat"><label>Total spikes</label><span class="value" id="stat-spikes">0</span></div>
+  <svg id="spike-chart"></svg>
+</div>
+
+<script>
+// ──────────────────────────────────────────────────────────────────────────────
+// State
+// ──────────────────────────────────────────────────────────────────────────────
+const state = {
+  nodes: [],
+  links: [],
+  nodeMap: {},         // name → node object
+  spikeHistory: [],    // rolling [rate] array for sparkline
+  totalSpikes: 0,
+  step: 0,
+  trajectory: [],
+  foodPos: null,
+  paused: false,
+};
+
+const TYPE_COLOR = {
+  sensory:     '#4fc3f7',
+  interneuron: '#aed581',
+  motor:       '#ef9a9a',
+  pharyngeal:  '#ce93d8',
+  unknown:     '#78909c',
+};
+
+// ──────────────────────────────────────────────────────────────────────────────
+// D3 Force Graph
+// ──────────────────────────────────────────────────────────────────────────────
+const graphSvg = d3.select('#connectome');
+let simulation, linkSel, nodeSel, W, H;
+
+function initGraph(nodeNames) {
+  graphSvg.selectAll('*').remove();
+  W = graphSvg.node().clientWidth || 800;
+  H = graphSvg.node().clientHeight || 500;
+
+  // Limit display to 150 nodes for performance
+  const displayNames = nodeNames.slice(0, 150);
+
+  state.nodes = displayNames.map((name, i) => ({
+    id: i, name,
+    type: guessType(name),
+    x: W / 2 + (Math.random() - 0.5) * W * 0.5,
+    y: H / 2 + (Math.random() - 0.5) * H * 0.5,
+    activity: 0,
+    spiking: false,
+  }));
+  state.nodeMap = Object.fromEntries(state.nodes.map(n => [n.name, n]));
+
+  // Placeholder links — replaced when graph init message arrives
+  state.links = [];
+
+  const g = graphSvg.append('g').attr('id', 'main-g');
+  graphSvg.call(
+    d3.zoom().scaleExtent([0.2, 5]).on('zoom', e => g.attr('transform', e.transform))
+  );
+
+  linkSel = g.append('g').attr('class', 'links').selectAll('line');
+  nodeSel = g.append('g').attr('class', 'nodes').selectAll('.node');
+
+  simulation = d3.forceSimulation(state.nodes)
+    .force('link', d3.forceLink(state.links).id(d => d.id).distance(18).strength(0.4))
+    .force('charge', d3.forceManyBody().strength(-40))
+    .force('center', d3.forceCenter(W / 2, H / 2))
+    .force('collide', d3.forceCollide(7))
+    .alphaDecay(0.01)
+    .on('tick', ticked);
+
+  renderNodes();
+}
+
+function renderNodes() {
+  nodeSel = nodeSel
+    .data(state.nodes, d => d.id)
+    .join(
+      enter => {
+        const g = enter.append('g').attr('class', 'node')
+          .call(d3.drag()
+            .on('start', dragStart)
+            .on('drag', dragged)
+            .on('end', dragEnd))
+          .on('mouseover', showTooltip)
+          .on('mousemove', moveTooltip)
+          .on('mouseout', hideTooltip);
+        g.append('circle')
+          .attr('r', 4)
+          .attr('fill', d => TYPE_COLOR[d.type] || TYPE_COLOR.unknown);
+        return g;
+      },
+    );
+}
+
+function ticked() {
+  linkSel
+    .attr('x1', d => d.source.x).attr('y1', d => d.source.y)
+    .attr('x2', d => d.target.x).attr('y2', d => d.target.y);
+  nodeSel.attr('transform', d => `translate(${d.x},${d.y})`);
+}
+
+// ──────────────────────────────────────────────────────────────────────────────
+// Update functions (called per-step)
+// ──────────────────────────────────────────────────────────────────────────────
+function applyStep(msg) {
+  if (state.paused) return;
+
+  state.step = msg.step;
+  document.getElementById('step-counter').textContent = `Step: ${state.step}`;
+
+  const { indices, values } = msg.spikes;
+  let stepSpikes = 0;
+
+  // Reset all activity
+  state.nodes.forEach(n => { n.activity *= 0.7; n.spiking = false; });
+
+  // Apply new spikes
+  indices.forEach((idx, i) => {
+    const nodeName = state.nodes[idx]?.name;
+    const node = nodeName ? state.nodeMap[nodeName] : state.nodes[idx];
+    if (!node) return;
+    node.activity = Math.min(1.0, node.activity + Math.abs(values[i]));
+    node.spiking = values[i] > 0.5;
+    if (node.spiking) stepSpikes++;
+  });
+
+  state.totalSpikes += stepSpikes;
+  state.spikeHistory.push(stepSpikes);
+  if (state.spikeHistory.length > 200) state.spikeHistory.shift();
+
+  // Update node visuals
+  nodeSel.select('circle')
+    .attr('r', d => 3 + d.activity * 8)
+    .attr('fill', d => {
+      if (d.activity < 0.1) return TYPE_COLOR[d.type] || TYPE_COLOR.unknown;
+      const base = d3.color(TYPE_COLOR[d.type] || TYPE_COLOR.unknown);
+      if (!base) return '#fff';
+      return d3.interpolateRgb(base.toString(), '#ffffff')(d.activity * 0.8);
+    });
+
+  nodeSel.classed('spiking', d => d.spiking);
+
+  // Stats
+  document.getElementById('stat-spikes').textContent = state.totalSpikes;
+  updateSparkline();
+
+  // Body position
+  if (msg.body && msg.body.length > 0) {
+    state.trajectory.push(msg.body[0]);  // head position
+    if (state.trajectory.length > 100) state.trajectory.shift();
+    if (msg.food) state.foodPos = msg.food;
+    updateWormView(msg.body);
+    updateCI();
+  }
+}
+
+// ──────────────────────────────────────────────────────────────────────────────
+// Worm body + trajectory view
+// ──────────────────────────────────────────────────────────────────────────────
+function updateWormView(bodySegs) {
+  const svg = d3.select('#worm-view');
+  const W2 = svg.node().clientWidth || 280;
+  const H2 = svg.node().clientHeight || 200;
+
+  const allX = bodySegs.map(p => p[0]).concat(state.trajectory.map(p => p[0]));
+  const allY = bodySegs.map(p => p[1]).concat(state.trajectory.map(p => p[1]));
+  if (state.foodPos) { allX.push(state.foodPos[0]); allY.push(state.foodPos[1]); }
+
+  const xScale = d3.scaleLinear().domain([d3.min(allX)-5, d3.max(allX)+5]).range([20, W2-20]);
+  const yScale = d3.scaleLinear().domain([d3.min(allY)-5, d3.max(allY)+5]).range([H2-20, 20]);
+
+  svg.selectAll('*').remove();
+
+  // Trajectory trail
+  if (state.trajectory.length > 1) {
+    const line = d3.line().x(p => xScale(p[0])).y(p => yScale(p[1])).curve(d3.curveCatmullRom);
+    svg.append('path')
+      .datum(state.trajectory)
+      .attr('d', line)
+      .attr('fill', 'none')
+      .attr('stroke', '#1d4ed8')
+      .attr('stroke-width', 1)
+      .attr('stroke-opacity', 0.5);
+  }
+
+  // Food gradient
+  if (state.foodPos) {
+    const defs = svg.append('defs');
+    const grad = defs.append('radialGradient').attr('id', 'food-grad');
+    grad.append('stop').attr('offset', '0%').attr('stop-color', '#fbbf24').attr('stop-opacity', 0.6);
+    grad.append('stop').attr('offset', '100%').attr('stop-color', '#fbbf24').attr('stop-opacity', 0);
+    svg.append('circle')
+      .attr('cx', xScale(state.foodPos[0]))
+      .attr('cy', yScale(state.foodPos[1]))
+      .attr('r', 30)
+      .attr('fill', 'url(#food-grad)');
+    svg.append('text')
+      .attr('x', xScale(state.foodPos[0]))
+      .attr('y', yScale(state.foodPos[1]) - 14)
+      .attr('text-anchor', 'middle')
+      .attr('font-size', 16)
+      .text('★');
+  }
+
+  // Worm body
+  const bodyLine = d3.line()
+    .x(p => xScale(p[0])).y(p => yScale(p[1]))
+    .curve(d3.curveCatmullRom.alpha(0.5));
+  svg.append('path')
+    .datum(bodySegs)
+    .attr('d', bodyLine)
+    .attr('fill', 'none')
+    .attr('stroke', '#00ff88')
+    .attr('stroke-width', 5)
+    .attr('stroke-linecap', 'round');
+
+  // Head
+  if (bodySegs.length > 0) {
+    svg.append('circle')
+      .attr('cx', xScale(bodySegs[0][0])).attr('cy', yScale(bodySegs[0][1]))
+      .attr('r', 5).attr('fill', '#ffffff');
+  }
+}
+
+// ──────────────────────────────────────────────────────────────────────────────
+// Chemotaxis Index display
+// ──────────────────────────────────────────────────────────────────────────────
+function updateCI() {
+  if (state.trajectory.length < 5 || !state.foodPos) return;
+  const traj = state.trajectory;
+  const food = state.foodPos;
+  let toward = 0, away = 0;
+  for (let i = 1; i < traj.length; i++) {
+    const d0 = dist2(traj[i-1], food), d1 = dist2(traj[i], food);
+    if (d1 < d0) toward++; else if (d1 > d0) away++;
+  }
+  const ci = (toward - away) / Math.max(toward + away, 1);
+  const el = document.getElementById('ci-display');
+  el.textContent = `CI: ${ci.toFixed(2)}`;
+  el.className = ci > 0.3 ? 'ci-good' : ci < -0.1 ? 'ci-bad' : '';
+}
+
+function dist2(a, b) {
+  return Math.sqrt((a[0]-b[0])**2 + (a[1]-b[1])**2);
+}
+
+// ──────────────────────────────────────────────────────────────────────────────
+// Sparkline (spike rate history)
+// ──────────────────────────────────────────────────────────────────────────────
+function updateSparkline() {
+  const svg = d3.select('#spike-chart');
+  const W3 = svg.node().clientWidth || 300;
+  const H3 = svg.node().clientHeight || 60;
+  svg.selectAll('*').remove();
+  if (state.spikeHistory.length < 2) return;
+
+  const xS = d3.scaleLinear().domain([0, state.spikeHistory.length-1]).range([0, W3]);
+  const yS = d3.scaleLinear().domain([0, d3.max(state.spikeHistory) + 1]).range([H3-4, 4]);
+
+  const area = d3.area()
+    .x((d,i) => xS(i)).y0(H3-4).y1(d => yS(d))
+    .curve(d3.curveBasis);
+
+  svg.append('path')
+    .datum(state.spikeHistory)
+    .attr('d', area)
+    .attr('fill', '#1d4ed8').attr('fill-opacity', 0.5);
+
+  const line = d3.line().x((d,i) => xS(i)).y(d => yS(d)).curve(d3.curveBasis);
+  svg.append('path')
+    .datum(state.spikeHistory)
+    .attr('d', line)
+    .attr('fill', 'none').attr('stroke', '#60a5fa').attr('stroke-width', 1.5);
+}
+
+// ──────────────────────────────────────────────────────────────────────────────
+// Drag behaviour
+// ──────────────────────────────────────────────────────────────────────────────
+function dragStart(e, d) {
+  if (!e.active) simulation.alphaTarget(0.3).restart();
+  d.fx = d.x; d.fy = d.y;
+}
+function dragged(e, d) { d.fx = e.x; d.fy = e.y; }
+function dragEnd(e, d) {
+  if (!e.active) simulation.alphaTarget(0);
+  d.fx = null; d.fy = null;
+}
+
+// ──────────────────────────────────────────────────────────────────────────────
+// Tooltip
+// ──────────────────────────────────────────────────────────────────────────────
+const tip = document.getElementById('tooltip');
+function showTooltip(e, d) {
+  tip.style.display = 'block';
+  tip.innerHTML = `<b>${d.name}</b><br>Type: ${d.type}<br>Activity: ${d.activity.toFixed(3)}`;
+}
+function moveTooltip(e) {
+  tip.style.left = (e.offsetX + 12) + 'px';
+  tip.style.top  = (e.offsetY + 12) + 'px';
+}
+function hideTooltip() { tip.style.display = 'none'; }
+
+// ──────────────────────────────────────────────────────────────────────────────
+// Neuron type guesser (from name pattern)
+// ──────────────────────────────────────────────────────────────────────────────
+function guessType(name) {
+  if (/^(AS|DA|DB|DD|VA|VB|VC|VD|PDA|PDB|DVB|PDEL|PDER|PVCL|PVCR|SAB|SIA|SMB|SMD)/.test(name)) return 'motor';
+  if (/^(I[1-6]|M[1-5]|MCL|MCR|MI|NSM|MVL)/.test(name)) return 'pharyngeal';
+  if (/^(AVA|AVB|AVD|AVE|AVF|AVG|AVH|AVJ|AVK|AVL|AIA|AIB|AIM|AIN|AIY|AIZ|ALA|RIA|RIB|RIC|RID|RIF|RIG|RIH|RIM|RIN|RIR|RIS|RIV|RMD|RME|RMF|RMG|RMH|PVN|PVP|PVQ|PVR|PVT|PVW|CAN|DVC|DVA|HSN|LUA|BDU)/.test(name)) return 'interneuron';
+  return 'sensory';
+}
+
+// ──────────────────────────────────────────────────────────────────────────────
+// WebSocket connection
+// ──────────────────────────────────────────────────────────────────────────────
+let ws = null, reconnectTimer = null;
+
+function connect() {
+  const proto = location.protocol === 'https:' ? 'wss' : 'ws';
+  const url = `${proto}://${location.host}/ws`;
+  ws = new WebSocket(url);
+
+  ws.onopen = () => {
+    document.getElementById('status-badge').textContent = 'LIVE';
+    document.getElementById('status-badge').className = 'badge live';
+    clearInterval(reconnectTimer);
+  };
+
+  ws.onmessage = (event) => {
+    const msg = JSON.parse(event.data);
+    if (msg.type === 'init') {
+      initGraph(msg.node_names);
+      msg.history.forEach(applyStep);
+    } else if (msg.type === 'step') {
+      applyStep(msg);
+    } else if (msg.type === 'pong') {
+      // keepalive
+    }
+  };
+
+  ws.onerror = () => {
+    document.getElementById('status-badge').textContent = 'ERROR';
+    document.getElementById('status-badge').className = 'badge paused';
+  };
+
+  ws.onclose = () => {
+    document.getElementById('status-badge').textContent = 'RECONNECTING';
+    document.getElementById('status-badge').className = 'badge paused';
+    reconnectTimer = setTimeout(connect, 2000);
+  };
+}
+
+// Keepalive ping
+setInterval(() => { if (ws && ws.readyState === 1) ws.send('ping'); }, 15000);
+
+// Keyboard controls
+document.addEventListener('keydown', e => {
+  if (e.key === ' ') { state.paused = !state.paused; }
+});
+
+// Start
+connect();
+</script>
+</body>
+</html>

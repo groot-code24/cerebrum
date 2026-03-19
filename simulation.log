@@ -1,0 +1,21 @@
+{"ts": "2026-03-18T15:57:27.627962+00:00", "level": "INFO", "logger": "run_simulation", "msg": "Loading connectome from /home/claude/celegans_emulator/data/raw", "module": "run_simulation", "line": 64}
+{"ts": "2026-03-18T15:57:27.645134+00:00", "level": "INFO", "logger": "run_simulation", "msg": "Starting simulation: 200 steps", "module": "run_simulation", "line": 82}
+{"ts": "2026-03-18T15:57:28.103259+00:00", "level": "INFO", "logger": "run_simulation", "msg": "Saving visualisations...", "module": "run_simulation", "line": 91}
+{"ts": "2026-03-18T15:58:20.543354+00:00", "level": "INFO", "logger": "run_simulation", "msg": "Loading connectome from /home/claude/celegans_emulator/data/raw", "module": "run_simulation", "line": 64}
+{"ts": "2026-03-18T15:58:20.564523+00:00", "level": "INFO", "logger": "run_simulation", "msg": "Starting simulation: 200 steps", "module": "run_simulation", "line": 82}
+{"ts": "2026-03-18T15:58:21.111059+00:00", "level": "INFO", "logger": "run_simulation", "msg": "Saving visualisations...", "module": "run_simulation", "line": 91}
+{"ts": "2026-03-19T06:34:35.611742+00:00", "level": "INFO", "logger": "run_simulation", "msg": "Loading connectome from /home/claude/celegans_emulator/data/raw", "module": "run_simulation", "line": 64}
+{"ts": "2026-03-19T06:34:35.646313+00:00", "level": "INFO", "logger": "run_simulation", "msg": "Starting simulation: 200 steps", "module": "run_simulation", "line": 82}
+{"ts": "2026-03-19T06:34:36.842345+00:00", "level": "INFO", "logger": "run_simulation", "msg": "Saving visualisations...", "module": "run_simulation", "line": 91}
+{"ts": "2026-03-19T07:21:56.602277+00:00", "level": "INFO", "logger": "run_simulation", "msg": "Loading connectome from /home/claude/celegans_emulator/data/raw", "module": "run_simulation", "line": 64}
+{"ts": "2026-03-19T07:21:56.618710+00:00", "level": "INFO", "logger": "run_simulation", "msg": "Starting simulation: 500 steps", "module": "run_simulation", "line": 82}
+{"ts": "2026-03-19T07:21:59.405879+00:00", "level": "INFO", "logger": "run_simulation", "msg": "Saving visualisations...", "module": "run_simulation", "line": 91}
+{"ts": "2026-03-19T07:36:44.191742+00:00", "level": "INFO", "logger": "run_simulation", "msg": "Loading connectome from C:\\Users\\palma\\Downloads\\celegans_emulator_v4\\celegans_emulator\\data\\raw", "module": "run_simulation", "line": 64}
+{"ts": "2026-03-19T07:36:44.211917+00:00", "level": "INFO", "logger": "run_simulation", "msg": "Starting simulation: 1000 steps", "module": "run_simulation", "line": 82}
+{"ts": "2026-03-19T07:36:50.681511+00:00", "level": "INFO", "logger": "run_simulation", "msg": "Saving visualisations...", "module": "run_simulation", "line": 91}
+{"ts": "2026-03-19T07:37:18.016478+00:00", "level": "INFO", "logger": "run_simulation", "msg": "Loading connectome from C:\\Users\\palma\\Downloads\\celegans_emulator_v4\\celegans_emulator\\data\\raw", "module": "run_simulation", "line": 64}
+{"ts": "2026-03-19T07:37:18.031383+00:00", "level": "INFO", "logger": "run_simulation", "msg": "Starting simulation: 500 steps", "module": "run_simulation", "line": 82}
+{"ts": "2026-03-19T07:37:20.106381+00:00", "level": "INFO", "logger": "run_simulation", "msg": "Saving visualisations...", "module": "run_simulation", "line": 91}
+{"ts": "2026-03-19T11:53:38.637594+00:00", "level": "INFO", "logger": "run_simulation", "msg": "Loading connectome from C:\\Users\\palma\\Downloads\\celegans_emulator_v4\\celegans_emulator\\data\\raw", "module": "run_simulation", "line": 64}
+{"ts": "2026-03-19T11:53:38.701534+00:00", "level": "INFO", "logger": "run_simulation", "msg": "Starting simulation: 1000 steps", "module": "run_simulation", "line": 82}
+{"ts": "2026-03-19T11:53:45.666843+00:00", "level": "INFO", "logger": "run_simulation", "msg": "Saving visualisations...", "module": "run_simulation", "line": 91}

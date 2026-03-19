@@ -1,0 +1,19 @@
+{
+  "food_reached": false,
+  "total_displacement": NaN,
+  "episode_steps": 200,
+  "elapsed_seconds": 0.453,
+  "mean_spike_rate_by_type": {
+    "sensory": 0.0,
+    "interneuron": 0.1085,
+    "motor": 0.347692
+  },
+  "spike_history_shape": [
+    200,
+    31
+  ],
+  "trajectory_shape": [
+    200,
+    2
+  ]
+}

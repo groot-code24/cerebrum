@@ -1,0 +1,13 @@
+{
+  "ablated_neurons": [
+    "AWCL",
+    "AWCR"
+  ],
+  "ablation_fraction": 0.0,
+  "ablation_seed": -1,
+  "locomotion_score": 1.0,
+  "chemotaxis_score": 0.0,
+  "mean_spike_rate_change": 0.0,
+  "behavioral_degradation_pct": 50.0,
+  "food_reached": false
+}

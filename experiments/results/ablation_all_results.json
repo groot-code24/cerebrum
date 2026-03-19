@@ -1,0 +1,187 @@
+[
+  {
+    "ablated_neurons": [
+      "AVBR",
+      "AVBL"
+    ],
+    "ablation_fraction": 0.0,
+    "ablation_seed": -1,
+    "locomotion_score": 1.0,
+    "chemotaxis_score": 0.0,
+    "mean_spike_rate_change": 0.042139,
+    "behavioral_degradation_pct": 50.0,
+    "food_reached": false
+  },
+  {
+    "ablated_neurons": [
+      "AWCL",
+      "AWCR"
+    ],
+    "ablation_fraction": 0.0,
+    "ablation_seed": -1,
+    "locomotion_score": 1.0,
+    "chemotaxis_score": 0.0,
+    "mean_spike_rate_change": 0.0,
+    "behavioral_degradation_pct": 50.0,
+    "food_reached": false
+  },
+  {
+    "ablated_neurons": [
+      "ASEL",
+      "ASER"
+    ],
+    "ablation_fraction": 0.0,
+    "ablation_seed": -1,
+    "locomotion_score": 1.0,
+    "chemotaxis_score": 0.0,
+    "mean_spike_rate_change": 0.0,
+    "behavioral_degradation_pct": 50.0,
+    "food_reached": false
+  },
+  {
+    "ablated_neurons": [
+      "AIYL",
+      "AIYR"
+    ],
+    "ablation_fraction": 0.0,
+    "ablation_seed": -1,
+    "locomotion_score": 1.0,
+    "chemotaxis_score": 0.0,
+    "mean_spike_rate_change": 0.0,
+    "behavioral_degradation_pct": 50.0,
+    "food_reached": false
+  },
+  {
+    "ablated_neurons": [
+      "AIZL",
+      "AIZR"
+    ],
+    "ablation_fraction": 0.0,
+    "ablation_seed": -1,
+    "locomotion_score": 1.0,
+    "chemotaxis_score": 0.0,
+    "mean_spike_rate_change": 0.0,
+    "behavioral_degradation_pct": 50.0,
+    "food_reached": false
+  },
+  {
+    "ablated_neurons": [],
+    "ablation_fraction": 0.0,
+    "ablation_seed": 42,
+    "locomotion_score": 1.0,
+    "chemotaxis_score": 0.0,
+    "mean_spike_rate_change": 0.0,
+    "behavioral_degradation_pct": 50.0,
+    "food_reached": false
+  },
+  {
+    "ablated_neurons": [],
+    "ablation_fraction": 0.0,
+    "ablation_seed": 123,
+    "locomotion_score": 1.0,
+    "chemotaxis_score": 0.0,
+    "mean_spike_rate_change": 0.0,
+    "behavioral_degradation_pct": 50.0,
+    "food_reached": false
+  },
+  {
+    "ablated_neurons": [],
+    "ablation_fraction": 0.0,
+    "ablation_seed": 456,
+    "locomotion_score": 1.0,
+    "chemotaxis_score": 0.0,
+    "mean_spike_rate_change": 0.0,
+    "behavioral_degradation_pct": 50.0,
+    "food_reached": false
+  },
+  {
+    "ablated_neurons": [],
+    "ablation_fraction": 0.1,
+    "ablation_seed": 42,
+    "locomotion_score": 1.0,
+    "chemotaxis_score": 0.0,
+    "mean_spike_rate_change": 0.019175,
+    "behavioral_degradation_pct": 50.0,
+    "food_reached": false
+  },
+  {
+    "ablated_neurons": [],
+    "ablation_fraction": 0.1,
+    "ablation_seed": 123,
+    "locomotion_score": 1.0,
+    "chemotaxis_score": 0.0,
+    "mean_spike_rate_change": -0.01041,
+    "behavioral_degradation_pct": 50.0,
+    "food_reached": false
+  },
+  {
+    "ablated_neurons": [],
+    "ablation_fraction": 0.1,
+    "ablation_seed": 456,
+    "locomotion_score": 1.0,
+    "chemotaxis_score": 0.0,
+    "mean_spike_rate_change": -0.031958,
+    "behavioral_degradation_pct": 50.0,
+    "food_reached": false
+  },
+  {
+    "ablated_neurons": [],
+    "ablation_fraction": 0.25,
+    "ablation_seed": 42,
+    "locomotion_score": 1.0,
+    "chemotaxis_score": 0.0,
+    "mean_spike_rate_change": -0.010372,
+    "behavioral_degradation_pct": 50.0,
+    "food_reached": false
+  },
+  {
+    "ablated_neurons": [],
+    "ablation_fraction": 0.25,
+    "ablation_seed": 123,
+    "locomotion_score": 1.0,
+    "chemotaxis_score": 0.0,
+    "mean_spike_rate_change": 0.025375,
+    "behavioral_degradation_pct": 50.0,
+    "food_reached": false
+  },
+  {
+    "ablated_neurons": [],
+    "ablation_fraction": 0.25,
+    "ablation_seed": 456,
+    "locomotion_score": 1.0,
+    "chemotaxis_score": 0.0,
+    "mean_spike_rate_change": -0.046272,
+    "behavioral_degradation_pct": 50.0,
+    "food_reached": false
+  },
+  {
+    "ablated_neurons": [],
+    "ablation_fraction": 0.5,
+    "ablation_seed": 42,
+    "locomotion_score": 1.0,
+    "chemotaxis_score": 0.0,
+    "mean_spike_rate_change": -0.05519,
+    "behavioral_degradation_pct": 50.0,
+    "food_reached": false
+  },
+  {
+    "ablated_neurons": [],
+    "ablation_fraction": 0.5,
+    "ablation_seed": 123,
+    "locomotion_score": 1.0,
+    "chemotaxis_score": 0.0,
+    "mean_spike_rate_change": -0.049487,
+    "behavioral_degradation_pct": 50.0,
+    "food_reached": false
+  },
+  {
+    "ablated_neurons": [],
+    "ablation_fraction": 0.5,
+    "ablation_seed": 456,
+    "locomotion_score": 1.0,
+    "chemotaxis_score": 0.0,
+    "mean_spike_rate_change": -0.081943,
+    "behavioral_degradation_pct": 50.0,
+    "food_reached": false
+  }
+]
